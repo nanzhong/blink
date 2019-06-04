@@ -248,6 +248,8 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
   UndoManager *_undoManager;
   BOOL _skipTextStorageDelete;
   NSString * _markedText;
+
+  BOOL _capsLockPressed;
 }
 
 + (void)initialize
@@ -682,6 +684,12 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
 - (void)autoRepeatSeq:(id)sender
 {
   UIKeyCommand *command = (UIKeyCommand*)sender;
+
+  if (_capsLockPressed) {
+    [self ctrlSeq:command];
+    return;
+  }
+
   if  (_device.view.hasSelection) {
     [self _changeSelection:command];
   } else {
@@ -1238,10 +1246,15 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
   [self _setKbdCommands];
 }
 
-//- (void)_handleKeyUIEvent:(id)event {
-//  KeyInput *input = [KeyInput buildKeyInputFrom:event];
-//  NSLog(@"%@", input);
-//  [super _handleKeyUIEvent:event];
-//}
+- (void)_handleKeyUIEvent:(id)event {
+  KeyInput *input = [KeyInput buildKeyInputFrom:event];
+  //NSLog(@"%@", input);
+
+  if ([input keyCode] == 57) {
+      _capsLockPressed = [input isKeyDown];
+  }
+
+  [super _handleKeyUIEvent:event];
+}
 
 @end
