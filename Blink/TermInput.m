@@ -430,6 +430,11 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
       [self deviceWrite:[CC KEY:text MOD:0 RAW:_device.rawMode]];
     }
   } else {
+    if (_capsLockPressed) {
+      [self ctrlSeqWithInput:text];
+      return;
+    }
+
     NSUInteger modifiers = [[_smartKeys view] modifiers];
     if (modifiers == KbdCtrlModifier) {
       [self ctrlSeqWithInput:text];
@@ -641,6 +646,10 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
 - (void)autoRepeatSeq:(id)sender
 {
   UIKeyCommand *command = (UIKeyCommand*)sender;
+  if (_capsLockPressed) {
+    [self ctrlSeq:command];
+    return;
+  }
   if  (_device.view.hasSelection) {
     [self _changeSelection:command];
   } else {
@@ -911,7 +920,7 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
     shiftCharset = @"qwertyuiopasdfghjklzxcvbnm";
     charset = [shiftCharset stringByAppendingString:@"1234567890`~!@#$%^&*()_=+[]{}\\|;':\",./<>?\t"];
   } else if (seq == TermViewAutoRepeateSeq) {
-    charset = @"qwertyuiopasdfghjklzxcvbnm1234567890";
+    charset = @"qwertyuiopasdfghjklzxcvbnm1234567890[\\]^/_\t ";
   } else {
     return;
   }
@@ -1038,6 +1047,11 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
   }
 
   return commands;
+}
+
+- (void)capsLockPress:(UIKeyCommand*)cmd {
+  NSLog(@"%@",cmd);
+  _capsLockPressed=true;
 }
 
 - (BOOL)_capsMapped {
@@ -1200,6 +1214,34 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
   }
   
   [self _setKbdCommands];
+}
+
+- (void)_handleKeyUIEvent:(id)event {
+  KeyInput *input = [KeyInput buildKeyInputFrom:event];
+  //NSLog(@"keycode: %d isKeyDown: %d modifiers: %d", input.keyCode, input.isKeyDown, input.modifierFlags);
+  if (input.keyCode == 57) {
+    _capsLockPressed = input.isKeyDown;
+  }
+  [super _handleKeyUIEvent:event];
+}
+
+@end
+
+@implementation KeyInput
+
++ (KeyInput *)buildKeyInputFrom:(id) event {
+  KeyInput *input = [[KeyInput alloc] init];
+  @try {
+    input.keyCode = [[event valueForKey:@"_keyCode"] longLongValue];
+    input.isKeyDown = [[event valueForKey:@"_isKeyDown"] boolValue];
+    input.modifierFlags = [[event valueForKey:@"_modifierFlags"] longLongValue];
+  } @catch (NSException *exception) {
+
+  } @finally {
+
+  }
+
+  return input;
 }
 
 @end

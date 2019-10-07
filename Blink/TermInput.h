@@ -60,6 +60,7 @@
 @interface TermInput : UITextView
 
 @property BOOL softwareKB;
+@property BOOL capsLockPressed;
 
 @property (weak) TermDevice *device;
 
@@ -79,3 +80,25 @@
 - (void)ctrlSeqWithInput:(NSString *)input;
 
 @end
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface KeyInput : NSObject
+
+@property (nonatomic) long long modifierFlags;
+@property (nonatomic) long long keyCode;
+@property (nonatomic) BOOL isKeyDown;
+
++ (KeyInput *)buildKeyInputFrom:(id) event;
+
+@end
+
+
+@interface UIResponder (KeyInput)
+
+- (void)_handleKeyUIEvent:(id) event;
+
+@end
+
+
+NS_ASSUME_NONNULL_END
