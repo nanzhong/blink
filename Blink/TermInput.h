@@ -61,6 +61,7 @@
 
 @property BOOL softwareKB;
 @property BOOL capsLockPressed;
+@property BOOL ctrlPressed;
 
 @property (weak) TermDevice *device;
 

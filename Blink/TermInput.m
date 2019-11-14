@@ -430,7 +430,7 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
       [self deviceWrite:[CC KEY:text MOD:0 RAW:_device.rawMode]];
     }
   } else {
-    if (_capsLockPressed) {
+    if (_capsLockPressed || _ctrlPressed) {
       [self ctrlSeqWithInput:text];
       return;
     }
@@ -646,7 +646,7 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
 - (void)autoRepeatSeq:(id)sender
 {
   UIKeyCommand *command = (UIKeyCommand*)sender;
-  if (_capsLockPressed) {
+  if (_capsLockPressed || _ctrlPressed) {
     [self ctrlSeq:command];
     return;
   }
@@ -1049,11 +1049,6 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
   return commands;
 }
 
-- (void)capsLockPress:(UIKeyCommand*)cmd {
-  NSLog(@"%@",cmd);
-  _capsLockPressed=true;
-}
-
 - (BOOL)_capsMapped {
   NSNumber *key = @(UIKeyModifierAlphaShift);
   
@@ -1177,6 +1172,7 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
   if ([BKDefaults autoRepeatKeys]) {
     _controlKeys = [_controlKeys mutableCopy];
     [self _assignSequence:TermViewAutoRepeateSeq toModifier:kNilOptions];
+    [self _assignSequence:TermViewAutoRepeateSeq toModifier:UIKeyModifierControl];
   }
 
   if ([BKDefaults isShiftAsEsc]) {
@@ -1218,11 +1214,16 @@ NSString *const TermViewAutoRepeateSeq = @"autoRepeatSeq:";
 
 - (void)_handleKeyUIEvent:(id)event {
   KeyInput *input = [KeyInput buildKeyInputFrom:event];
-  //NSLog(@"keycode: %d isKeyDown: %d modifiers: %d", input.keyCode, input.isKeyDown, input.modifierFlags);
+  // NSLog(@"keycode: %d isKeyDown: %d modifiers: %d", input.keyCode, input.isKeyDown, input.modifierFlags);
   if (input.keyCode == 57) {
     _capsLockPressed = input.isKeyDown;
   }
-  [super _handleKeyUIEvent:event];
+  _ctrlPressed = input.modifierFlags & UIKeyModifierControl;
+  if (_ctrlPressed && input.keyCode == 44 && input.isKeyDown == 0) {
+    [self ctrlSeqWithInput:@" "];
+  } else {
+    [super _handleKeyUIEvent:event];
+  }
 }
 
 @end
